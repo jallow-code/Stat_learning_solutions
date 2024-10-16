@@ -78,4 +78,26 @@ contrasts(ShelveLoc) # Function to return the coding that R uses for the dummy v
 ?contrasts
 
 #----- Exercises ----
+data(Auto)
+attach(Auto)
+lm.fit <- lm(mpg ~ horsepower)
+summary(lm.fit)
+predict(lm.fit, data.frame(horsepower = 98), interval = "confidence")
+predict(lm.fit, data.frame(horsepower = 98), interval = "prediction")
+plot(mpg, horsepower)
+abline(lm.fit, lwd = 3, col = "blue")
+par(mfrow = c(1,1))
+plot(lm.fit)
 
+pairs(Auto)
+Auto1 <- Auto[, -9] # the name variable is remove before the cor()
+cor(Auto1) # The name variable is excluded because it is qualitative (see above)
+lm.fit <- lm(mpg ~ . -name, data = Auto)
+summary(lm.fit)
+par(mfrow = c(2,2))
+plot(lm.fit)
+lm.fit <- lm(mpg ~ horsepower*cylinders + displacement:weight + origin:year, data = Auto)
+summary(lm.fit)     
+
+lm.fit2 <- lm(mpg ~ log(horsepower))
+plot(lm.fit2)
