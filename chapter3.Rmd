@@ -1,0 +1,107 @@
+---
+title: "Chapter 3 Lab and Exercises"
+output:
+  html_document:
+    df_print: paged
+---
+
+## The Stock Market Data
+
+``` r
+
+library(ISLR2)
+names(Smarket)
+
+dim(Smarket)
+summary(Smarket)
+
+pairs(Smarket) # plot the correlation metrix of all pairwise correlations among the predictors.
+
+cor(Smarket) # error message because the Direction variable is qualitative
+Smarket = Smarket[, -9] #exclude the qualitative variable from the data frame
+cor(Smarket)
+
+attach(Smarket)
+plot(Volume)
+```
+
+## Logistic Regression
+
+The generalized linear model function, `glm()`, is used to fit a logistic regression to predict `Direction` using the `Lag1` through `Lag5` and `Volume`.
+
+``` r
+
+glm.fit <- glm(
+  Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume,
+  data = Smarket, family = binomial)
+
+summary(glm.fit)
+
+coef(glm.fit)
+summary(glm.fit)$coef # only information about the coefficients
+summary(glm.fit)$coef[, 4] # coef. of Pr(>|z|): p-values
+```
+
+The `predict()` function can be used to predict the probability that the market will go up, given values of the predictors.
+
+``` r
+
+glm.probs <- predict(glm.fit, type = "response")
+glm.probs[1:10]
+
+length(glm.probs)
+
+contrasts(Direction) # show that R have created dummy variables
+```
+
+To predict whether the market will go up or down on a particular day, we must convert these predicted probabilities into a class labels, `Up` or `down`.
+
+``` r
+
+glm.pred <- rep("Down", 1250) # 1250 is the number of observations in that data
+glm.pred[glm.probs > 0.5] = "Up" 
+
+table(glm.pred, Direction) # produce a confusion matrix
+
+(507 + 145)/1250 # fraction of predictions which the prediction was correct
+mean(glm.pred == Direction) # alternatative method to determine the fraction
+
+1 - (mean(glm.pred == Direction)) # traning error rate: 47.84%
+
+```
+
+The diagonal elements of the confusion matrix indicate correct predictions, while the off-diagonals represent incorrect predictions. The result above is misleading because we trained and tested the model on the same set of 1,250 observations. Hence, the training error rate (47.84%) is often overly optimistic.
+
+In order to better assess the accuracy of the logistic regression model in this setting, we can fit the model using part of the data, and then examine how well it predicts the *held out data*.`
+
+```R
+
+train <- (Year < 2005) # Boolean vector of 1,250 elements
+Smarket.2005 <- Smarket[!train, ] # submatrix of stock market of the year 2005.
+
+dim(Smarket.2005)
+
+```
+> We now fit a logistic regression model using only the subset of the observations that correspond to dates before 2005, using the `subset` argument.
+
+```R
+
+glm.fits <- glm(
+  Direction ~ Lag1 + Lag2 + Lag3 + Lag4 + Lag5 + Volume,
+  data = Smarket, family = binomial, subset = train
+  )
+  
+glm.probs <- predict(glm.fits, Smarket.2005, type = "response")  # Smarket.2005: test data set
+
+glm.pred <- rep("Down", 252)
+glm.pred[glm.probs > .5] <- "Up"
+
+table(glm.pred, Smarket.2005$Direction)
+  
+``` 
+
+
+
+
+
+
